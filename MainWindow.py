@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'MainWindow.ui'
-#
-# Created by: PyQt5 UI code generator 5.6
-#
-# WARNING! All changes made in this file will be lost!
+"""
+Small script, to download Youtube videos and convert to *.mp3s
+"""
+__author__ = "Frank Ehebrecht"
+__copyright__ = "Copyright 2018"
+__license__ = "GPL"
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from SubDiag import Ui_Dialog
@@ -40,58 +40,48 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-
-        #TODO DUMB
-        #dumb - vllt auch errors? was ist mit yt-dl msgs ?
-        sys.stdout = Stream(newText=self.onUpdateText)
-
-
-        #color schemes
-        self.color_scheme = {'todo': '676767', 'doing': '000000', 'done': '00ff00', 'failed': 'ff0000'}
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+        # Redirect stdout to textBrowser_2.
+        sys.stdout = Stream(newText=self.onUpdateText)
+
+        # Define color schemes for processing history.
+        self.color_scheme = {'todo': '676767', 'doing': '000000', 'done': '00ff00', 'failed': 'ff0000'}
 
         # Open the sub dialog on button clicked.
         self.pushButton.clicked.connect(self.openDiag)
 
-        # Init TaskList and Download Threads
+        # Initialize TaskList-Thread and Download-Thread.
         self.taskQueueThread = TaskQueueThread()
         self.ytdlThread = YTDLThread()
 
         # Connect Signal and Slots of Threads
-        # Update DONE of FAILED tasks: ytdlThread > ListThread
+        # Update DONE of FAILED tasks: ytdlThread -> taskQueueThread
         self.ytdlThread.job_done_signal.connect(self.update_task_status)
-        # Update Text Field. Brauche ich das? Ja! Immer wieder Textfeld neu (+methode)
+        # Update Text Field.
         self.taskQueueThread.myUpdatedTaskList.connect(self.update_text_field)
-        # Emit new Task to ytdl
+        # Emit new Task from taskQueueThread to ytdlThread.
         self.taskQueueThread.myDownloadTaskSignal.connect(self.add_new_task_to_dl_thread)
 
-        # Start Threads
+        # Start Threads.
         self.taskQueueThread.start()
         self.ytdlThread.start()
 
-    #remove else when tested on website
+    # Add task to taskQueue.
     def update_task_status(self, yt_task):
         if (len(yt_task[0]) > 0):
             self.taskQueueThread.update_task_status(yt_task)
-        else:
-            #self.taskQueueThread.update_task_status(yt_task)
-            pass
     
+    # Add task to downloader.
     def add_new_task_to_dl_thread(self, yt_task):
         self.ytdlThread.yt_task_setter(yt_task)
     
-    #needs change. currently for debug without internet
+    # Update text of textBrowser.
     def update_text_field(self, yt_task_queue):
-        #outstr = r''
-        #for task in yt_task_queue:
-        #    outstr += task[2]
-        #self.textBrowser.setText(outstr)
         self.textBrowser.setText(self.list2string(yt_task_queue))
 
-    #TODO    
-    #moredump
+    # Helper for redirect of stdout.
     def onUpdateText(self, text):
         cursor = self.textBrowser_2.textCursor()
         cursor.movePosition(QtGui.QTextCursor.End)
@@ -99,10 +89,9 @@ class Ui_MainWindow(object):
         self.textBrowser_2.setTextCursor(cursor)
         self.textBrowser_2.ensureCursorVisible()
     
+    # Helper for redirect of stdout.
     def __del__(self):
         sys.stdout = sys.__stdout__
-        
-
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -110,24 +99,22 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "YouTubeDownloader"))
         self.pushButton.setText(_translate("MainWindow", "ADD"))
 
+    # Open dialog to enter URL and file name.
     def openDiag(self):
         Dialog = QtWidgets.QDialog()
         ui = Ui_Dialog()
         ui.setupUi(Dialog)
         Dialog.show()
         Dialog.exec_()
-        ui.yt_task # Diesen Task hinzufuergen
-        self.taskQueueThread.yt_task_queue.append(ui.yt_task) # aaaaaber, wenn der append in der schleife stattfindet . ists okay
-        #print(self.taskQueueThread.yt_task_queue) # kann auch ma wieder weg
+        # Append task to task list.
+        self.taskQueueThread.yt_task_queue.append(ui.yt_task)
 
-    #puh aufgepasst, lieber die liste parsen
+    # Convert task list to layouted string
     def list2string(self, yt_task_queue):
-        ##if len(self.yt_task_queue) == 0:
         if len(yt_task_queue) == 0:
             return ' '
         else:
             mystr = ''
-            #for task in self.yt_task_queue:
             for task in yt_task_queue:
                 word = '<span style=\" color: #%s;\">%s <br></span>' % (self.color_scheme[task[2]], task[1])
                 mystr += word
@@ -142,4 +129,3 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
-
