@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'SubDiag.ui'
-#
-# Created by: PyQt5 UI code generator 5.6
-#
-# WARNING! All changes made in this file will be lost!
+"""
+Small script, to download Youtube videos and convert to *.mp3s
+"""
+__author__ = "Frank Ehebrecht"
+__copyright__ = "Copyright 2018"
+__license__ = "GPL"
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import urllib.request
@@ -44,11 +44,13 @@ class Ui_Dialog(object):
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
         
+        # Set yt_task iff Dialog has been accepted (return [] when canceled).
         Dialog.accepted.connect(self.create_yt_task)
         self.yt_task = []
 
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
+        # Connect buttons.
         self.pushButton_2.clicked.connect(self.paste_from_clipboard)
         self.pushButton.clicked.connect(self.get_yt_title)
 
@@ -67,7 +69,7 @@ class Ui_Dialog(object):
     def paste_from_clipboard(self):
         self.lineEdit.setText(pyperclip.paste())
 
-    #try and catch exceptions (no internet connection or invalid youtube url)
+    # Get HTML-title and try and catch exceptions (no internet connection or invalid youtube url)
     def get_yt_title(self):
         try:
             url = self.lineEdit.text()
@@ -87,11 +89,12 @@ class Ui_Dialog(object):
             self.lineEdit_2.setText(failedText)
             self.yt_title = ''
 
-    # clean/reinigen string of special chars
+    # clean string of special chars
     def perhaps_some_regex_magix(self):
+        #TODO: regex stuff
         pass
 
-    # irgendwas nicht okay? return []. OK button ausgrauen solange keine passende URL eingefuegt? ... later dude
+    # Define youtube_task ([URL, title, status]). If valid task return [].
     def create_yt_task(self):
         self.yt_task = [self.yt_url, self.yt_title, 'todo']
 
