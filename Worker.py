@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Small script, to download Youtube videos and convert to *.mp3s
+"""
+__author__ = "Frank Ehebrecht"
+__copyright__ = "Copyright 2018"
+__license__ = "GPL"
+
 import numpy as np
 from PyQt5.QtCore import QObject, pyqtSignal, QThread, pyqtSlot
 import time
@@ -5,9 +13,7 @@ import youtube_dl
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 
-
-
-# hier kommen history und done liste rein?
+# Task Queue Thread: Update task queue and emit next download task
 class TaskQueueThread(QThread):
 
     myDownloadTaskSignal = pyqtSignal(list)
@@ -19,12 +25,9 @@ class TaskQueueThread(QThread):
         self.yt_task_update = []
 
     def run(self):
-        #wenn kein doing, emit erstes todo
-        #emit auch immer die liste (2 Signale)
-        #wie geht dann todo->done ?
+        # No 'doing'? -> emit first 'todo'
         while True:
-
-            # Download fertig? Setze status auf done oder failed
+            # Download done? Set status to 'done' or 'failed'
             running_task = False
             if (len(self.yt_task_update) != 0):
                 for (idx, task) in enumerate(self.yt_task_queue):
@@ -33,36 +36,31 @@ class TaskQueueThread(QThread):
                         self.yt_task_update = []
                         break
 
-            # Laeuft gerade ein Download
+            # Is there a download running?
             for task in self.yt_task_queue:
                 if task[2]=='doing':
                     running_task = True
                     break
 
-            # Wenn kein DL laeuft gibt neuen DL Auftrag
+            # If no download is running, emit next task.
             if not running_task:
                 for (idx, task) in enumerate(self.yt_task_queue):
                     if task[2] == 'todo':
                         self.yt_task_queue[idx][2] = 'doing'
-                        self.myDownloadTaskSignal.emit(task) #um neue auftraege zu stellen
+                        self.myDownloadTaskSignal.emit(task) #  To create new DL task.
                         break
-            self.myUpdatedTaskList.emit(self.yt_task_queue) #um das textfeld upzudaten
+            self.myUpdatedTaskList.emit(self.yt_task_queue) #  To update textfield.
             time.sleep(0.5)
     
-    #brauche ich nicht
-    #@pyqtSlot(list)
-    #def add_to_task_queue(self, yt_task):
-    #    self.yt_task_queue.append(yt_task)
-    
-    #hier dockt der ytdlthread an
+    # Slot, the ytdlThread docks to.
     @pyqtSlot(list)
     def update_task_status(self, yt_task):
         self.yt_task_update = yt_task
 
-
+# Download YoutubeVideo
 class YTDLThread(QThread):
 
-    #braucht Signal, dass er fertig ist. Wird von TaskQueueThread.yt_task_queue aufgenommen
+    # Signal for task queue, that download process has finished.
     job_done_signal = pyqtSignal(list)
 
     def __init__(self, parent=None):
@@ -82,13 +80,10 @@ class YTDLThread(QThread):
                     self.yt_task[2] = 'failed'
                     self.job_done_signal.emit(self.yt_task)
                     self.yt_task = []
-                    
 
     def download_music(self, yt_task):
-        #print(yt_task)
         title = yt_task[1]
         video_url = yt_task[0]
-        #print(yt_task)
 
         ydl_opts = {
             'outtmpl': '{}.%(ext)s'.format(title),
@@ -107,17 +102,12 @@ class YTDLThread(QThread):
             'title': title,
         }
 
-
-
-
-
-
-
-
+    # Slot to set yt_task.
     @pyqtSlot(list)
     def yt_task_setter(self, yt_task):
         self.yt_task = yt_task
 
+# Helper for redirect of stdout.
 class Stream(QObject):
     newText = pyqtSignal(str)
 
