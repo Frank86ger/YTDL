@@ -70,12 +70,15 @@ class Ui_MainWindow(object):
 
     # Add task to taskQueue.
     def update_task_status(self, yt_task):
-        if (len(yt_task[0]) > 0):
+        #if (len(yt_task[0]) > 0):
+        if (len(yt_task) > 0):
             self.taskQueueThread.update_task_status(yt_task)
     
     # Add task to downloader.
     def add_new_task_to_dl_thread(self, yt_task):
-        self.ytdlThread.yt_task_setter(yt_task)
+        #if (len(yt_task[0]) > 0):  # new
+        if (len(yt_task) > 0):
+            self.ytdlThread.yt_task_setter(yt_task)
     
     # Update text of textBrowser.
     def update_text_field(self, yt_task_queue):
@@ -107,7 +110,11 @@ class Ui_MainWindow(object):
         Dialog.show()
         Dialog.exec_()
         # Append task to task list.
-        self.taskQueueThread.yt_task_queue.append(ui.yt_task)
+        # TODO: Append on if len(yt_task[0]) > 0
+        if len(ui.yt_task) > 0:
+            self.taskQueueThread.yt_task_queue.append(ui.yt_task)
+        else:
+            pass
 
     # Convert task list to layouted string
     def list2string(self, yt_task_queue):

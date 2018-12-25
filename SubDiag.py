@@ -11,6 +11,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 import time
 import pyperclip
+from PyQt5.QtWidgets import QDialogButtonBox
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -43,10 +44,16 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
-        
+
+        #ausgrauen
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
         # Set yt_task iff Dialog has been accepted (return [] when canceled).
         Dialog.accepted.connect(self.create_yt_task)
-        self.yt_task = []
+        Dialog.rejected.connect(self.create_void_task)
+        #TODO
+        #Dialog.rejected.connect(...)
+        self.yt_task = None
 
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -83,6 +90,7 @@ class Ui_Dialog(object):
                 self.lineEdit_2.setStyleSheet("color: black;")
                 self.lineEdit_2.setText(soup.title.string[:-10])
                 self.yt_title = soup.title.string[:-10]
+                self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
         except:
             failedText = 'No connection to that website could be established.'
             self.lineEdit_2.setStyleSheet("color: red;")
@@ -96,8 +104,11 @@ class Ui_Dialog(object):
 
     # Define youtube_task ([URL, title, status]). If valid task return [].
     def create_yt_task(self):
-        self.yt_task = [self.yt_url, self.yt_title, 'todo']
+        #TODO ... if len(yt_url)==0: -> yt_task = []
+        self.yt_task = [self.yt_url, self.lineEdit_2.text(), 'todo']
 
+    def create_void_task(self):
+        self.yt_task = []
 
 if __name__ == "__main__":
     import sys
