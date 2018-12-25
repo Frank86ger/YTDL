@@ -12,6 +12,7 @@ import time
 import youtube_dl
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
+import os
 
 # Task Queue Thread: Update task queue and emit next download task
 class TaskQueueThread(QThread):
@@ -82,8 +83,13 @@ class YTDLThread(QThread):
                     self.yt_task = []
 
     def download_music(self, yt_task):
-        title = yt_task[1]
+        #title = yt_task[1]
         video_url = yt_task[0]
+
+        f = open("outfolder.txt", 'rt')
+        out_folder = f.readline()[:-1]
+        f.close()
+        title = os.path.join(out_folder, yt_task[1])
 
         ydl_opts = {
             'outtmpl': '{}.%(ext)s'.format(title),
@@ -97,10 +103,10 @@ class YTDLThread(QThread):
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([video_url])
         
-        return {
-            'audio': open('{}.mp3'.format(title), 'rb'),
-            'title': title,
-        }
+        #return {
+        #    'audio': open('{}.mp3'.format(title), 'rb'),
+        #    'title': title,
+        #}
 
     # Slot to set yt_task.
     @pyqtSlot(list)
